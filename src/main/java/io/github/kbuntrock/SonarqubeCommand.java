@@ -1,15 +1,17 @@
 package io.github.kbuntrock;
 
-import ch.qos.logback.classic.Level;
 import com.auth0.jwt.JWT;
-import io.github.kbuntrock.dto.IssueResolution;
 import io.github.kbuntrock.dto.StatusAuthentification;
 import io.github.kbuntrock.http.JsonBodyHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.shell.component.StringInput;
+import org.springframework.shell.component.flow.ComponentFlow;
+import org.springframework.shell.component.flow.SelectItem;
+import org.springframework.shell.standard.AbstractShellComponent;
+import org.springframework.shell.standard.ShellComponent;
+import org.springframework.shell.standard.ShellMethod;
 
 import java.io.IOException;
 import java.net.URI;
@@ -17,50 +19,82 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.concurrent.Callable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Supplier;
+import java.util.Arrays;
+import java.util.List;
+
 
 /**
  * @author Kévin Buntrock
  */
-@Component
-@Command(name = "sonarqubeCommand")
-public class SonarqubeCommand implements Callable<Integer> {
+@ShellComponent
+public class SonarqubeCommand extends AbstractShellComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SonarqubeCommand.class);
 
+    @Autowired
+    private ComponentFlow.Builder componentFlowBuilder;
 
-    @Option(names = {"-d", "--debug"}, description = "Turn on debug logs", required = false)
-    boolean debug;
 
-    @Option(names = {"-o", "--output"}, description = "Output file", required = false)
-    String outputFilePath;
 
     // token = 437ce2bb9a4076f56bfd739cefe777572adb4d82
-    @Option(names = {"-s", "--server"}, description = "SonarQube server", required = true)
     String sonarqubeServer;
-    @Option(names = {"-t", "--token"}, description = "SonarQube token", required = true)
     String sonarqubeToken;
 
-    @Option(names = {"-p", "--project"}, description = "SonarQube project id", required = true)
     String projectId;
 
-
-    @Override
-    public Integer call() throws Exception {
-
-        try {
-            if (debug) {
-                ((ch.qos.logback.classic.Logger) LOGGER).setLevel(Level.DEBUG);
-            }
-            connect();
-            listerIssuesAMigrer();
-        } catch (final Exception ex) {
-            LOGGER.error("error", ex);
-            return -1;
-        }
-        return 0;
+    @ShellMethod("Add two integers together.")
+    public int add(int a, int b) {
+        return a + b;
     }
+
+    @ShellMethod(key = "test", value = "String input", group = "Components")
+    public String stringInput() {
+        StringInput component = new StringInput(getTerminal(), "Enter value", "myvalue");
+//        component.setResourceLoader(getResourceLoader());
+//        component.setTemplateExecutor(getTemplateExecutor());
+//        if (mask) {
+//            component.setMaskCharater('*');
+//        }
+        StringInput.StringInputContext context = component.run(StringInput.StringInputContext.empty());
+        return "Got value " + context.getResultValue();
+    }
+
+    @ShellMethod(key = "flow showcase1", value = "Showcase", group = "Flow")
+    public void showcase1() {
+        Map<String, String> single1SelectItems = new HashMap<>();
+        single1SelectItems.put("key1", "value1");
+        single1SelectItems.put("key2", "value2");
+        List<SelectItem> multi1SelectItems = Arrays.asList(SelectItem.of("key1", "value1"),
+                SelectItem.of("key2", "value2"), SelectItem.of("key3", "value3"));
+        ComponentFlow flow = componentFlowBuilder.clone().reset()
+                .withStringInput("field1")
+                .name("Field1")
+                .defaultValue("defaultField1Value")
+                .and()
+                .withStringInput("field2")
+                .name("Field2")
+                .and()
+                .withConfirmationInput("confirmation1")
+                .name("Confirmation1")
+                .and()
+                .withPathInput("path1")
+                .name("Path1")
+                .and()
+                .withSingleItemSelector("single1")
+                .name("Single1")
+                .selectItems(single1SelectItems)
+                .and()
+                .withMultiItemSelector("multi1")
+                .name("Multi1")
+                .selectItems(multi1SelectItems)
+                .and()
+                .build();
+        flow.run();
+    }
+
 
     private void connect() throws URISyntaxException, IOException, InterruptedException {
         HttpRequest request = HttpRequest.newBuilder().uri(new URI(sonarqubeServer + "/api/authentication/validate")).GET().header("Authorization", "Bearer " + sonarqubeToken) //  'Authorization' => "Bearer $token",

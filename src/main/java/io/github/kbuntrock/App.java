@@ -1,35 +1,25 @@
 package io.github.kbuntrock;
 
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.ExitCodeGenerator;
+import org.jline.utils.AttributedString;
+import org.jline.utils.AttributedStyle;
+import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import picocli.CommandLine;
-import picocli.CommandLine.IFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.shell.jline.PromptProvider;
 
 @SpringBootApplication
-public class App implements CommandLineRunner, ExitCodeGenerator {
+public class App {
 
-	private final IFactory factory;
-	private final SonarqubeCommand command;
-	private int exitCode;
+	public static void main(String[] args) {
 
-	public static void main(final String[] args) {
-		SpringApplication.run(App.class, args);
+		SpringApplication application = new SpringApplication(App.class);
+		application.setBannerMode(Banner.Mode.OFF);
+		application.run(args);
 	}
 
-	public App(final IFactory factory, final SonarqubeCommand command) {
-		this.factory = factory;
-		this.command = command;
-	}
-
-	@Override
-	public void run(final String... args) throws Exception {
-		exitCode = new CommandLine(command, factory).execute(args);
-	}
-
-	@Override
-	public int getExitCode() {
-		return 0;
-	}
+//	@Bean
+//	public PromptProvider myPromptProvider() {
+//		return () -> new AttributedString(":>", AttributedStyle.DEFAULT.foreground(AttributedStyle.BLUE));
+//	}
 }
