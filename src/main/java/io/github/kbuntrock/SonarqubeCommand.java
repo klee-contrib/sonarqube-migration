@@ -58,8 +58,11 @@ public class SonarqubeCommand extends AbstractShellComponent {
     private static final String ISSUES_FILE_PATH = DATA_DIRECTORY_PATH + "/issues.json";
     private static final String TRANSFERABLE_ISSUES_FILE_PATH = DATA_DIRECTORY_PATH + "/transferable-issues.json";
     private static final String NON_TRANSFERABLE_ISSUES_FILE_PATH = DATA_DIRECTORY_PATH + "/non-transferable-issues.json";
+    public static final String GROUP_CONFIGURATION = "Configuration";
+    public static final String GROUP_MIGRATION = "Migration";
+    public static final String GROUP_ADVANCED_USAGE = "Migration advanced usage";
 
-    private static HttpClient httpClient = HttpClient.newBuilder().sslContext(HttpUtils.getAcceptAllSslContext()).build();
+    private static final HttpClient httpClient = HttpClient.newBuilder().sslContext(HttpUtils.getAcceptAllSslContext()).build();
 
     @Autowired
     private ComponentFlow.Builder componentFlowBuilder;
@@ -72,7 +75,7 @@ public class SonarqubeCommand extends AbstractShellComponent {
     @EventListener(ApplicationStartedEvent.class)
     public void runAfterStartup() throws IOException {
         System.out.println("Welcome.");
-        if (loadConfigurationInternal()) {
+        if (loadConfiguration()) {
             System.out.println("A previously saved configuration has been loaded.");
         } else {
             System.out.println("Enter command \"configure\" in order to setup a migration.");
@@ -80,7 +83,7 @@ public class SonarqubeCommand extends AbstractShellComponent {
 
     }
 
-    @ShellMethod(key = "configure", value = "Configure the origin and destination server/project", group = "Configuration")
+    @ShellMethod(key = "configure", value = "Configure the origin and destination server/project", group = GROUP_CONFIGURATION)
     public void configure() throws IOException {
 
         final String originHostId = "originHostId";
@@ -187,17 +190,7 @@ public class SonarqubeCommand extends AbstractShellComponent {
         }
     }
 
-    @ShellMethod(key = "load configuration", value = "", group = "Configuration")
-    public void loadConfiguration() throws IOException {
-
-        if (!loadConfigurationInternal()) {
-            System.out.println("There is no previous configuration to load.");
-        } else {
-            System.out.println("Previous configuration loaded");
-        }
-    }
-
-    private boolean loadConfigurationInternal() throws IOException {
+    private boolean loadConfiguration() throws IOException {
 
         if (Files.exists(Path.of(CONFIGURATION_FILE_PATH))) {
             migrationConfiguration = OBJECT_MAPPER.readValue(new File(CONFIGURATION_FILE_PATH), MigrationConfiguration.class);
@@ -206,7 +199,7 @@ public class SonarqubeCommand extends AbstractShellComponent {
         return false;
     }
 
-    @ShellMethod(key = "print configuration", value = "Print current configuration", group = "Configuration")
+    @ShellMethod(key = "print configuration", value = "Print the current configuration", group = GROUP_CONFIGURATION)
     public void printConfiguration() {
         ServerConfiguration origin = migrationConfiguration.getOrigin();
         ServerConfiguration destination = migrationConfiguration.getDestination();
@@ -223,7 +216,7 @@ public class SonarqubeCommand extends AbstractShellComponent {
         System.out.println("- Jwt : " + destination.getJwt());
     }
 
-    @ShellMethod(key = "test connection", value = "Test the connection with the server", group = "Configuration")
+    @ShellMethod(key = "test connection", value = "Test the connection with the origin and destination servers", group = GROUP_CONFIGURATION)
     public void testConnectionServer() {
         try {
             boolean originValidity = testConnexionServer(migrationConfiguration.getOrigin());
@@ -256,8 +249,7 @@ public class SonarqubeCommand extends AbstractShellComponent {
         HttpRequest.Builder builder = createBuilder(config);
         builder.uri(new URI(config.getHost() + "/api/authentication/validate")).GET();
         HttpRequest request = builder.build();
-        HttpClient client = HttpClient.newBuilder().sslContext(HttpUtils.getAcceptAllSslContext()).build();
-        HttpResponse<Supplier<StatusAuthentification>> response = client.send(request, JsonBodyHandler.forType(StatusAuthentification.class));
+        HttpResponse<Supplier<StatusAuthentification>> response = httpClient.send(request, JsonBodyHandler.forType(StatusAuthentification.class));
         if (!String.valueOf(response.statusCode()).startsWith("2")) {
             LOGGER.error("Connexion au serveur sonarqube impossible. Code erreur {}", response.statusCode());
             throw new RuntimeException("Connexion impossible");
@@ -270,7 +262,7 @@ public class SonarqubeCommand extends AbstractShellComponent {
         return true;
     }
 
-    @ShellMethod(key = "prepare migration", value = "", group = "Migration")
+    @ShellMethod(key = "prepare migration", value = "Prepare the migration (find issues we want to migrate from the origin)", group = GROUP_MIGRATION)
     private void prepareMigration() throws URISyntaxException, IOException, InterruptedException {
 
         migrationData = new MigrationData();
@@ -351,7 +343,7 @@ public class SonarqubeCommand extends AbstractShellComponent {
         return JWT.decode(jwt).getClaim("xsrfToken").asString();
     }
 
-    @ShellMethod(key = "load migration", group = "Migration")
+    @ShellMethod(key = "load migration", value = "Load a previously saved migration data", group = GROUP_ADVANCED_USAGE)
     public void loadMigrationData() throws IOException {
 
         if (Files.exists(Path.of(ISSUES_FILE_PATH))) {
@@ -364,7 +356,7 @@ public class SonarqubeCommand extends AbstractShellComponent {
 
     }
 
-    @ShellMethod(key = "list rules", group = "Migration")
+    @ShellMethod(key = "list rules", value = "List origin server rules.", group = GROUP_ADVANCED_USAGE)
     public void listOriginRules() throws IOException, URISyntaxException, InterruptedException {
         Set<String> ruleSet = migrationData.getOriginIssues().stream().map(Issue::getRule).collect(Collectors.toSet());
         searchRules(migrationConfiguration.getOrigin(), ruleSet);
@@ -421,7 +413,7 @@ public class SonarqubeCommand extends AbstractShellComponent {
     }
 
 
-    @ShellMethod(key = "dry run migrate", group = "Migration")
+    @ShellMethod(key = "dry run migrate", value = "Show what will be the result of the migration.", group = GROUP_MIGRATION)
     public void scanDestination() throws IOException, URISyntaxException, InterruptedException {
 
         migrationData.clearDestinationIssues();
@@ -456,26 +448,11 @@ public class SonarqubeCommand extends AbstractShellComponent {
 
                 } else {
                     counterNonTransferable++;
-                    if (!originIssue.getRule().equals("findbugs:RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
-                            && !originIssue.getRule().equals("findsecbugs:SQL_INJECTION_JPA")
-                            && !originIssue.getRule().equals("findbugs:RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
-                            && !originIssue.getRule().equals("typescript:S4328")
-                            && !originIssue.getRule().equals("css:S4670")
-                    ) {
-                        migrationData.addNonTransferableIssue(originIssue);
-                    }
-
+                    migrationData.addNonTransferableIssue(originIssue);
                 }
             } else {
                 counterNonTransferable++;
-                if (!originIssue.getRule().equals("findbugs:RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
-                        && !originIssue.getRule().equals("findsecbugs:SQL_INJECTION_JPA")
-                        && !originIssue.getRule().equals("findbugs:RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
-                        && !originIssue.getRule().equals("typescript:S4328")
-                        && !originIssue.getRule().equals("css:S4670")
-                ) {
-                    migrationData.addNonTransferableIssue(originIssue);
-                }
+                migrationData.addNonTransferableIssue(originIssue);
             }
         }
         System.out.println(counterTransferable + " issues transferable. " + counterNonTransferable + " issues non transferable. " +
@@ -507,7 +484,7 @@ public class SonarqubeCommand extends AbstractShellComponent {
         return ruleList;
     }
 
-    @ShellMethod(key = "migrate", group = "Migration")
+    @ShellMethod(key = "migrate", value = "Do the migration", group = GROUP_MIGRATION)
     private void migrate() throws URISyntaxException, IOException, InterruptedException {
         scanDestination();
         Map<IssueResolution, List<IssueMigration>> issuesToTransfer = migrationData.getIssuesToTransfer();
@@ -523,8 +500,9 @@ public class SonarqubeCommand extends AbstractShellComponent {
         commentOnDestination(issuesWithComment);
     }
 
-    @ShellMethod(key = "reset destination", group = "Migration")
-    private void deleteAllCommentsOnDestination() throws URISyntaxException, IOException, InterruptedException {
+    @ShellMethod(key = "reset destination", value = "Delete all comments and re-open all \"won't fix\"-\"false positive\" " +
+            "issues on the destination project (warning : all of them, even previous ones)", group = GROUP_ADVANCED_USAGE)
+    private void resetDestination() throws URISyntaxException, IOException, InterruptedException {
         List<Issue> issues = listIssuesOnDestination(false).stream()
                 .filter(x -> {
                     if (x.getResolution() != null) {

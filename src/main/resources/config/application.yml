@@ -7,3 +7,9 @@ spring:
     command:
       history:
         enabled: false
+      script:
+        enabled: false
+      version:
+        show-build-group: true
+        show-build-time: true
+        show-build-artifact: true
