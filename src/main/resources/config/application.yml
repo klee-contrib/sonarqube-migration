@@ -1,3 +1,9 @@
 spring:
   main:
     log-startup-info: false
+  shell:
+    theme:
+      name: enhanced
+    command:
+      history:
+        enabled: false

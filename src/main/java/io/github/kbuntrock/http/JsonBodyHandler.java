@@ -13,7 +13,7 @@ import java.util.function.Supplier;
  */
 public class JsonBodyHandler<T> implements HttpResponse.BodyHandler<Supplier<T>> {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperHolder.INSTANCE.get();
 
     private Class<T> targetType;
 
