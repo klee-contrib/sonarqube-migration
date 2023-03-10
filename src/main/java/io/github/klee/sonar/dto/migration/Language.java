@@ -1,4 +1,4 @@
-package io.github.kbuntrock.dto.migration;
+package io.github.klee.sonar.dto.migration;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 public class Language {
 
     private String key;
-    
+
     private String name;
 
     public String getKey() {

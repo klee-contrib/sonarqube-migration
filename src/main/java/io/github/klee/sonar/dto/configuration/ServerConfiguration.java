@@ -1,4 +1,4 @@
-package io.github.kbuntrock.dto.configuration;
+package io.github.klee.sonar.dto.configuration;
 
 /**
  * Configuration d'un serveur / project

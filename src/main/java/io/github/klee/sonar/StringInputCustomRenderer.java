@@ -1,4 +1,4 @@
-package io.github.kbuntrock;
+package io.github.klee.sonar;
 
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStringBuilder;
@@ -20,13 +20,11 @@ public class StringInputCustomRenderer implements Function<StringInput.StringInp
         builder.append(" ");
         if (context.getResultValue() != null) {
             builder.append(context.getResultValue());
-        }
-        else  {
+        } else {
             String input = context.getInput();
             if (StringUtils.hasText(input)) {
                 builder.append(input);
-            }
-            else {
+            } else {
                 builder.append("[Default " + context.getDefaultValue() + "]");
             }
         }

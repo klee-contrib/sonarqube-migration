@@ -1,4 +1,4 @@
-package io.github.kbuntrock.dto.migration;
+package io.github.klee.sonar.dto.migration;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

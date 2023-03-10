@@ -1,4 +1,4 @@
-package io.github.kbuntrock.configuration;
+package io.github.klee.sonar.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -144,6 +144,7 @@ public class ThemeConfiguration {
         public String leftPointingQuotation() {
             return "<";
         }
+
         @Override
         public String rightPointingQuotation() {
             return ">";

@@ -1,4 +1,4 @@
-package io.github.kbuntrock.util;
+package io.github.klee.sonar.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

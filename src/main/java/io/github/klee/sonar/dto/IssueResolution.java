@@ -1,4 +1,4 @@
-package io.github.kbuntrock.dto;
+package io.github.klee.sonar.dto;
 
 import java.util.HashMap;
 import java.util.Map;

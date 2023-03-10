@@ -1,4 +1,4 @@
-package io.github.kbuntrock.http;
+package io.github.klee.sonar.http;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

@@ -1,6 +1,6 @@
-package io.github.kbuntrock.util;
+package io.github.klee.sonar.util;
 
-import io.github.kbuntrock.dto.migration.Rule;
+import io.github.klee.sonar.dto.migration.Rule;
 
 import java.util.Collection;
 import java.util.HashMap;

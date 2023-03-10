@@ -1,16 +1,16 @@
-package io.github.kbuntrock;
+package io.github.klee.sonar;
 
 import com.auth0.jwt.JWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.kbuntrock.dto.IssueResolution;
-import io.github.kbuntrock.dto.configuration.MigrationConfiguration;
-import io.github.kbuntrock.dto.configuration.ServerConfiguration;
-import io.github.kbuntrock.dto.configuration.StatusAuthentification;
-import io.github.kbuntrock.dto.migration.*;
-import io.github.kbuntrock.http.JsonBodyHandler;
-import io.github.kbuntrock.http.ObjectMapperHolder;
-import io.github.kbuntrock.util.HttpUtils;
-import io.github.kbuntrock.util.RuleUtils;
+import io.github.klee.sonar.dto.IssueResolution;
+import io.github.klee.sonar.dto.configuration.MigrationConfiguration;
+import io.github.klee.sonar.dto.configuration.ServerConfiguration;
+import io.github.klee.sonar.dto.configuration.StatusAuthentification;
+import io.github.klee.sonar.dto.migration.*;
+import io.github.klee.sonar.http.JsonBodyHandler;
+import io.github.klee.sonar.http.ObjectMapperHolder;
+import io.github.klee.sonar.util.HttpUtils;
+import io.github.klee.sonar.util.RuleUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

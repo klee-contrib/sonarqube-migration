@@ -1,4 +1,4 @@
-package io.github.kbuntrock;
+package io.github.klee.sonar;
 
 import org.jline.utils.AttributedString;
 import org.jline.utils.AttributedStyle;
